@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {validate,sameOrigin} from '../lib/core.mjs';
+const valid={event_id:'0a111111-1111-4111-8111-111111111111',name:'Test Student',email:' STUDENT@EXAMPLE.COM ',phone:'+233 24 123 4567',institution:'Test University',programme:'Engineering',level:'Level 200',experience:'',consent:true,website:''};
+test('normalizes valid form',()=>{assert.equal(validate(valid).p_email,'student@example.com');});
+for(const [key,value] of Object.entries({name:'',email:'broken',phone:'123',institution:'',programme:'',level:'invalid',experience:'unknown',consent:false,website:'spam',event_id:'broken'})){test('rejects '+key,()=>assert.throws(()=>validate({...valid,[key]:value})));}
+test('rejects hostile origin',()=>assert.equal(sameOrigin({headers:{host:'example.com',origin:'https://evil.example'}}),false));
+test('accepts same origin',()=>assert.equal(sameOrigin({headers:{host:'example.com',origin:'https://example.com'}}),true));

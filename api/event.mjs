@@ -1,0 +1,2 @@
+import {rpc,reply} from '../lib/core.mjs';
+export default async function handler(req,res){if(req.method!=='GET')return reply(res,405,{error:'Method not allowed.'});try{const event=await rpc('eai_public_event');return reply(res,200,{event,sitekey:process.env.TURNSTILE_SECRET_KEY&&process.env.TURNSTILE_HOSTNAME?process.env.TURNSTILE_SITE_KEY||null:null});}catch{return reply(res,503,{error:'Registration service unavailable.'});}}
