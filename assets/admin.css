@@ -1,78 +1,78 @@
-/* Admin — black & white theme */
-.admin-page { background: #000; color: #fff; }
-.admin-page .site-header { background: #000; border-bottom: 1px solid #333; }
-.admin-page .brand { color: #fff; }
-.admin-page .header-link { color: #aaa; }
-.admin-page .header-link:hover { color: #fff; }
+/* Admin — white background, black text */
+.admin-page { background: #fff; color: #111; }
+.admin-page .site-header { background: #fff; border-bottom: 1px solid #ddd; }
+.admin-page .brand { color: #111; }
+.admin-page .header-link { color: #666; }
+.admin-page .header-link:hover { color: #000; }
 .admin-page .kicker { color: #888; }
 .admin-page .muted { color: #888; }
 
 /* Layout */
 .admin-shell { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 .admin-login { max-width: 420px; margin: 4rem auto; }
-.admin-login h1 { margin: 0.5rem 0; color: #fff; }
+.admin-login h1 { margin: 0.5rem 0; color: #111; }
 .admin-login .field { margin-bottom: 1rem; }
-.admin-login label { color: #ccc; }
-.admin-login input { background: #111; border: 1px solid #333; color: #fff; }
-.admin-login input:focus { border-color: #888; outline: none; }
-.admin-login button { background: #fff; color: #000; border: none; }
-.admin-login button:hover { background: #ddd; }
+.admin-login label { color: #333; }
+.admin-login input { background: #f5f5f5; border: 1px solid #ccc; color: #111; }
+.admin-login input:focus { border-color: #666; outline: none; }
+.admin-login button { background: #111; color: #fff; border: none; }
+.admin-login button:hover { background: #333; }
 
 .admin-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-.admin-heading h1 { margin: 0.25rem 0 0; color: #fff; }
+.admin-heading h1 { margin: 0.25rem 0 0; color: #111; }
 .admin-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
 .admin-toolbar form { display: flex; gap: 0.5rem; }
-.admin-toolbar input[type="search"] { min-width: 220px; background: #111; border: 1px solid #333; color: #fff; }
-.admin-toolbar input[type="search"]:focus { border-color: #888; outline: none; }
-.admin-toolbar input[type="search"]::placeholder { color: #555; }
-.admin-toolbar .secondary { background: #222; color: #fff; border: 1px solid #444; }
-.admin-toolbar .secondary:hover { background: #333; }
+.admin-toolbar input[type="search"] { min-width: 220px; background: #f5f5f5; border: 1px solid #ccc; color: #111; }
+.admin-toolbar input[type="search"]:focus { border-color: #666; outline: none; }
+.admin-toolbar input[type="search"]::placeholder { color: #999; }
+.admin-toolbar .secondary { background: #f5f5f5; color: #111; border: 1px solid #ccc; }
+.admin-toolbar .secondary:hover { background: #e5e5e5; }
 
-.admin-error { color: #ff6b6b; font-size: 0.85rem; margin: 0.5rem 0; }
+.admin-error { color: #c00; font-size: 0.85rem; margin: 0.5rem 0; }
 .inline-error { font-size: 0.75rem; margin: 0.25rem 0 0; }
 .admin-logo { height: 28px; width: auto; margin-right: 0.25rem; }
 
 /* Pagination */
 .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
 .pagination span { font-size: 0.85rem; color: #888; }
-.pagination .secondary { background: #111; color: #fff; border: 1px solid #333; }
-.pagination .secondary:hover { background: #222; }
+.pagination .secondary { background: #f5f5f5; color: #111; border: 1px solid #ccc; }
+.pagination .secondary:hover { background: #e5e5e5; }
 .pagination .secondary:disabled { opacity: 0.3; }
 
 /* Sign-out button */
-#logout { background: #111; color: #fff; border: 1px solid #333; }
-#logout:hover { background: #222; }
+#logout { background: #f5f5f5; color: #111; border: 1px solid #ccc; }
+#logout:hover { background: #e5e5e5; }
 
 /* Status badges — monochrome */
 .admin-status { display: inline-block; padding: 0.2em 0.65em; border-radius: 999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
-.admin-status.pending { background: #222; color: #aaa; }
-.admin-status.paid { background: #fff; color: #000; }
-.admin-status.cancelled { background: #222; color: #666; text-decoration: line-through; }
-.admin-status.refunded { background: #222; color: #666; }
+.admin-status.pending { background: #eee; color: #666; }
+.admin-status.paid { background: #111; color: #fff; }
+.admin-status.cancelled { background: #eee; color: #999; text-decoration: line-through; }
+.admin-status.refunded { background: #eee; color: #999; }
 
 /* Table */
-.table-wrap { overflow-x: auto; border: 1px solid #333; border-radius: 8px; }
+.table-wrap { overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; }
 .reg-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 .reg-table thead { position: sticky; top: 0; z-index: 2; }
-.reg-table th { background: #111; color: #888; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.75rem; text-align: left; white-space: nowrap; border-bottom: 1px solid #333; }
-.reg-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid #1a1a1a; color: #ddd; vertical-align: middle; }
-.reg-table tbody tr:hover { background: #111; }
-.reg-table td.empty { text-align: center; padding: 2rem; color: #555; }
+.reg-table th { background: #f5f5f5; color: #666; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.75rem; text-align: left; white-space: nowrap; border-bottom: 1px solid #ddd; }
+.reg-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid #eee; color: #222; vertical-align: middle; }
+.reg-table tbody tr:hover { background: #fafafa; }
+.reg-table td.empty { text-align: center; padding: 2rem; color: #999; }
 
 /* Actions cell */
 .actions-cell { white-space: nowrap; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-.table-input { width: 110px; padding: 0.3rem 0.5rem; font-size: 0.75rem; border: 1px solid #333; border-radius: 4px; background: #111; color: #fff; }
-.table-input::placeholder { color: #555; }
-.table-input:focus { outline: none; border-color: #888; }
+.table-input { width: 110px; padding: 0.3rem 0.5rem; font-size: 0.75rem; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5; color: #111; }
+.table-input::placeholder { color: #999; }
+.table-input:focus { outline: none; border-color: #666; }
 
 /* Small action buttons — monochrome */
-.btn-sm { padding: 0.3rem 0.6rem; font-size: 0.7rem; font-weight: 600; border: 1px solid #444; border-radius: 4px; cursor: pointer; transition: background 0.15s; }
-.btn-sm:hover { background: #333; }
+.btn-sm { padding: 0.3rem 0.6rem; font-size: 0.7rem; font-weight: 600; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; transition: background 0.15s; }
+.btn-sm:hover { background: #e5e5e5; }
 .btn-sm:disabled { opacity: 0.3; cursor: not-allowed; }
-.btn-paid { background: #fff; color: #000; border-color: #fff; }
-.btn-paid:hover { background: #ccc; }
-.btn-cancel { background: #111; color: #aaa; border-color: #333; }
-.btn-refund { background: #111; color: #aaa; border-color: #333; }
+.btn-paid { background: #111; color: #fff; border-color: #111; }
+.btn-paid:hover { background: #333; }
+.btn-cancel { background: #f5f5f5; color: #666; border-color: #ccc; }
+.btn-refund { background: #f5f5f5; color: #666; border-color: #ccc; }
 
 /* Responsive */
 @media (max-width: 900px) {
