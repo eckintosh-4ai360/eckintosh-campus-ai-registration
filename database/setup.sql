@@ -11,7 +11,7 @@ create unique index eai_one_open_event on public.eai_events ((status)) where sta
 create table public.eai_registrations (
  id uuid primary key default gen_random_uuid(), event_id uuid not null references public.eai_events(id),
  reference text not null unique default ('EAI-'||upper(replace(gen_random_uuid()::text,'-',''))),
- full_name text not null, email text not null, phone text not null, institution text not null, programme text not null, study_level text not null, ai_experience text,
+ full_name text not null, email text not null, phone text not null, institution text, programme text not null, study_level text not null, ai_experience text,
  expected_fee_pesewas integer not null check(expected_fee_pesewas>0),
  status text not null default 'pending' check(status in ('pending','paid','cancelled','refunded')),
  payment_reference text unique, payment_verified_at timestamptz, consent_version text not null, consent_at timestamptz not null default now(), created_at timestamptz not null default now(),
