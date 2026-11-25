@@ -9,4 +9,4 @@ test('accepts same origin',()=>assert.equal(sameOrigin({headers:{host:'example.c
 
 test('validates formatted phone numbers',()=>{assert.equal(validPhone('+233 24 123 4567'),true);assert.equal(validPhone('hello'),false);});
 
-test('accepts new and existing registration reference formats',()=>{assert.equal(validReference('AIUG0123'),true);assert.equal(validReference('EAI-0123456789ABCDEF0123456789ABCDEF'),true);assert.equal(validReference('AIUG123'),false);});
+test('accepts new and existing registration reference formats',()=>{assert.equal(validReference('AI-UG-0123'),true);assert.equal(validReference('AIUG0123'),true);assert.equal(validReference('EAI-0123456789ABCDEF0123456789ABCDEF'),true);assert.equal(validReference('AI-UG-123'),false);});

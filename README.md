@@ -20,7 +20,7 @@ This replaces the earlier non-transmitting HTML demo. It is a full-stack registr
 
 The connection role owns the tables and bypasses row-level security; keep its credentials server-side and restrict access to your Neon project. SQL access for other roles must be explicitly granted as needed.
 
-For an existing database created before these changes, run `database/allow-null-institution.sql`, `database/use-phone-for-registration.sql`, `database/remove-capacity-limit.sql`, and `database/short-registration-references.sql`, and `database/admin-setup.sql`, in that order, in the Neon SQL Editor before deploying this version.
+For an existing database created before these changes, run `database/allow-null-institution.sql`, `database/use-phone-for-registration.sql`, `database/remove-capacity-limit.sql`, and `database/short-registration-references.sql`, `database/hyphenated-registration-references.sql`, and `database/admin-setup.sql`, in that order, in the Neon SQL Editor before deploying this version.
 
 ## 2. Deploy to your domain
 1. Upload the contents of this folder (including `api`, `lib`, `database`, `assets`, `vercel.json` and `package.json`) to a private Git repository. Do not upload a populated `.env` file. GitHub is optional: the Vercel CLI can deploy the directory directly.
@@ -51,7 +51,7 @@ The database is the source of truth. In the Neon SQL Editor, inspect `eai_regist
 
 To confirm a payment, compare the provider record with the expected fee, currency, participant and event, ensure it has not been refunded or reused, then update `payment_reference`, `payment_verified_at` and `status=paid` in a single database edit. The unique payment reference prevents reuse; no application verifies provider records automatically. Use only a trusted, authorised merchant channel. Resolve late payments before marking cancelled registrations paid. Cancel stale pending requests manually after following your published terms, to keep records current. Cancelled registrations retain the phone number check; restore or handle re-registration manually rather than deleting audit records. Avoid changing event fee while registrations are active; existing entries retain the original fee.
 
-Four-digit AIUG references provide 10,000 unique codes; registration cannot continue after all codes are used. There is no automatic expiry. Do not treat a pending registration as a confirmed seat. Define and publish a pending-payment deadline, terms and refund policy before opening registration. The admin page is available at `/admin`.
+Four-digit AI-UG references provide 10,000 unique codes; registration cannot continue after all codes are used. There is no automatic expiry. Do not treat a pending registration as a confirmed seat. Define and publish a pending-payment deadline, terms and refund policy before opening registration. The admin page is available at `/admin`.
 
 ## 4. Launch checklist
 - [ ] Approved date, venue, registration fee, payment instructions, refund/cancellation policy and support contact.

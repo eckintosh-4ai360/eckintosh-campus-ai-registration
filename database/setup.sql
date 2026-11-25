@@ -10,7 +10,7 @@ create table public.eai_events (
 create unique index eai_one_open_event on public.eai_events ((status)) where status='open';
 create table public.eai_registrations (
  id uuid primary key default gen_random_uuid(), event_id uuid not null references public.eai_events(id),
- reference text not null unique default ('AIUG'||lpad(((('x'||substr(replace(gen_random_uuid()::text,'-',''),1,8))::bit(32)::bigint % 10000)::text),4,'0')),
+ reference text not null unique default ('AI-UG-'||lpad(((('x'||substr(replace(gen_random_uuid()::text,'-',''),1,8))::bit(32)::bigint % 10000)::text),4,'0')),
  full_name text not null, email text, phone text not null, institution text, programme text not null, study_level text not null, ai_experience text,
  expected_fee_pesewas integer not null check(expected_fee_pesewas>0),
  status text not null default 'pending' check(status in ('pending','paid','cancelled','refunded')),
@@ -46,7 +46,7 @@ begin
  if exists(select 1 from public.eai_registrations where event_id=ev.id and regexp_replace(phone,'[^0-9]','','g')=regexp_replace(p_phone,'[^0-9]','','g')) then return jsonb_build_object('error','This phone number is already registered. Check your status or contact support.'); end if;
  start_number := (('x'||substr(replace(gen_random_uuid()::text,'-',''),1,8))::bit(32)::bigint % 10000)::integer;
  for attempt in 0..9999 loop
-  ref := 'AIUG'||lpad(((start_number+attempt)%10000)::text,4,'0');
+  ref := 'AI-UG-'||lpad(((start_number+attempt)%10000)::text,4,'0');
   begin
    insert into public.eai_registrations(event_id,reference,full_name,email,phone,institution,programme,study_level,ai_experience,expected_fee_pesewas,consent_version)
    values(ev.id,ref,p_name,p_email,p_phone,p_institution,p_programme,p_level,nullif(p_experience,''),ev.fee_pesewas,'2026-11-25-v1');
