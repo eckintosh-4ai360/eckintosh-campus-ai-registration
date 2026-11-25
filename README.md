@@ -8,7 +8,7 @@ This replaces the earlier non-transmitting HTML demo. It is a full-stack registr
 
 ## What is included
 - Responsive website, privacy notice, accessible labelled fields, registration status lookup, receipt reference and manual payment follow-up.
-- Server-side validation, Cloudflare Turnstile challenge, origin checks, non-public database tables, transactional intake capacity, per-event unique email and unguessable registration references.
+- Server-side validation, origin checks, non-public database tables, transactional intake capacity, per-event unique email and unguessable registration references.
 - Database schema, three Vercel Node API endpoints, tests, environment variable template and deployment instructions.
 - No real money is collected. Payment verification is performed manually by the authorised organiser against provider records. No automated email, SMS or WhatsApp is sent; the browser shows the reference. The official contact email is from the programme proposal; verify it is still correct before launch.
 
@@ -20,19 +20,17 @@ This replaces the earlier non-transmitting HTML demo. It is a full-stack registr
 
 The connection role owns the tables and bypasses row-level security; keep its credentials server-side and restrict access to your Neon project. SQL access for other roles must be explicitly granted as needed.
 
-## 2. Configure bot protection
-1. Create a Cloudflare Turnstile widget at https://dash.cloudflare.com/ in the Turnstile section, with your intended registration hostname allowlisted.
-2. Copy its site key and secret key. Set `TURNSTILE_HOSTNAME` to the exact production hostname (no protocol or slash). Use a separate staging widget/hostname for testing. The application verifies tokens server-side and checks the hostname. For local browser tests use a separate test environment and never use test keys in production.
+For an existing database created before the institution field was removed, run `database/allow-null-institution.sql` once in the Neon SQL Editor before deploying this version.
 
-## 3. Deploy to your domain
+## 2. Deploy to your domain
 1. Upload the contents of this folder (including `api`, `lib`, `database`, `assets`, `vercel.json` and `package.json`) to a private Git repository. Do not upload a populated `.env` file. GitHub is optional: the Vercel CLI can deploy the directory directly.
 2. In Vercel, create/import a project, use framework preset **Other**, root directory this folder, no build command and default output directory (do not choose a static-only output folder). Alternatively from this folder use `npx vercel` and then `npx vercel --prod` once configured.
-3. Add the four values listed in `.env.example` in Settings → Environment Variables for the correct environments. Redeploy after changes.
-4. Under Settings → Domains, add your desired registration subdomain, for example `register.yourdomain.com`. Follow Vercel's actual DNS instructions at your registrar; do not replace the records for your existing main site unnecessarily. Confirm HTTPS and exact Turnstile hostname. This is designed as a separate root-level project, not as a nested directory in an existing website.
+3. Add the database value listed in `.env.example` in Settings → Environment Variables for the correct environments. Redeploy after changes.
+4. Under Settings → Domains, add your desired registration subdomain, for example `register.yourdomain.com`. Follow Vercel's actual DNS instructions at your registrar; do not replace the records for your existing main site unnecessarily. Confirm HTTPS. This is designed as a separate root-level project, not as a nested directory in an existing website.
 5. Configure hosting-level request rate limits on `/api/register` and `/api/status` (and reasonable general API limits). Use the hosting provider's firewall or an equivalent reverse proxy. Review any hosting and database plan costs and commercial-use terms.
 6. Open the website. In a staging project, run the checklist below. When the approved event is ready, set the database event status to `open`. To stop registrations set it to `closed`.
 
-## 4. Manage registrations and payments
+## 3. Manage registrations and payments
 The database is the source of truth. In the Neon SQL Editor, inspect `eai_registrations` for attendee details, reference, expected_fee_pesewas, status and timestamps. Use MFA and restrict dashboard access. Export only what is needed to a secured CSV; do not share raw records publicly.
 
 `pending` = registration saved, payment not verified. `paid` = verified payment and seat confirmed. `cancelled` = released intake slot. `refunded` = verified refund, no seat. The site does not accept payment credentials. The event's approved payment instructions are displayed only after registration; configure them to tell students how to contact you or pay via your approved merchant method. Never request PINs or OTPs. Contact the participant yourself; no automated message is sent.
@@ -41,12 +39,12 @@ To confirm a payment, compare the provider record with the expected fee, currenc
 
 The capacity gate counts both pending and paid registrations, so requests temporarily occupy intake slots until the organiser cancels them. No automatic expiry or waitlist is provided. Do not treat a pending registration as a confirmed seat. Define and publish a pending-payment deadline, terms and refund policy before opening registration. No separate custom admin interface is included: the secured Neon console serves as the initial management interface.
 
-## 5. Launch checklist
+## 4. Launch checklist
 - [ ] Approved date, venue, registration fee, capacity, payment instructions, refund/cancellation policy and support contact.
 - [ ] Review the supplied privacy notice with the actual hosting/storage regions, providers, retention duration and Ghanaian data protection obligations; implement retention and access controls. Update the consent version in `database/setup.sql`/function when publishing a revised notice.
 - [ ] Database tables have RLS, anonymous access denied, server secrets restricted, MFA on admin accounts, HTTPS, backups and rate limits configured.
 - [ ] Valid submission creates one pending database row and a real reference; status lookup returns pending; wrong email/reference does not reveal personal data.
-- [ ] Duplicate, missing fields, invalid phone, expired CAPTCHA, closed event and full capacity are rejected; two simultaneous requests for the last intake slot result in only one success.
+- [ ] Duplicate, missing fields, invalid phone, closed event and full capacity are rejected; two simultaneous requests for the last intake slot result in only one success.
 - [ ] Verify a controlled real payment via approved provider; update record; lookup returns paid; test refund/cancellation handling.
 - [ ] Check mobile and desktop form, keyboard navigation and screen-reader labels; verify support links.
 - [ ] Close staging and remove test data from staging. Never use test credentials in production.
@@ -54,6 +52,6 @@ The capacity gate counts both pending and paid registrations, so requests tempor
 ## Local development and files
 Run `npm install`, copy `.env.example` to `.env`, and configure the variables. `npm run dev` serves the frontend and API locally at http://localhost:3000; restart it after editing `.env`. `npm run db:setup` initializes a new Neon database, and `npm test` runs Node validation tests. `npx vercel dev` is an alternative when using the Vercel CLI. A plain static server (`python -m http.server 8000`) is sufficient to preview layout only; submission correctly remains unavailable without the API. The included source is editable plain HTML/CSS/JS, not a framework-specific bundle.
 
-Reference docs: https://vercel.com/docs/functions/runtimes/node-js ; https://neon.com/docs/connect/connect-from-any-app ; https://developers.cloudflare.com/turnstile/get-started/server-side-validation/ ; https://dpc.gov.gh/
+Reference docs: https://vercel.com/docs/functions/runtimes/node-js ; https://neon.com/docs/connect/connect-from-any-app ; https://dpc.gov.gh/
 
-Verification performed for this package: local validation tests and browser layout checks. Live Vercel/Neon/Turnstile integration and payment verification must still be tested with your own accounts and credentials. No domain changes or deployments have been performed.
+Verification performed for this package: local validation tests and browser layout checks. Live Vercel/Neon integration and payment verification must still be tested with your own accounts and credentials. No domain changes or deployments have been performed.
