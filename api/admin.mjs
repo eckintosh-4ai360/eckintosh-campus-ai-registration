@@ -1,6 +1,7 @@
 import {createHash, createHmac, randomBytes, scrypt as scryptCallback, timingSafeEqual} from 'node:crypto';
 import {promisify} from 'node:util';
 import {body, dbQuery, reply, sameOrigin, uuid} from '../lib/core.mjs';
+import {defaultMessage, encryptApiKey, sendSms, validSmsSettings} from '../lib/sms.mjs';
 
 const scrypt = promisify(scryptCallback);
 const cookieName = 'eai_admin_session';
@@ -75,20 +76,63 @@ async function list(res, req) {
   const term = `%${search.replace(/[\\%_]/g, '\\$&')}%`;
   const where = `where ($1 = '' or r.reference ilike $2 or r.full_name ilike $2 or r.phone ilike $2)`;
   const count = await dbQuery(`select count(*)::int as total from public.eai_registrations r ${where}`, [search, term]);
-  const rows = await dbQuery(`select r.id,r.reference,r.full_name,r.phone,r.programme,r.study_level,r.status,r.expected_fee_pesewas,r.payment_reference,r.payment_verified_at,r.created_at,e.date_label,e.venue
+  const rows = await dbQuery(`select r.id,r.reference,r.full_name,r.phone,r.programme,r.study_level,r.status,r.expected_fee_pesewas,r.payment_reference,r.payment_verified_at,r.sms_status,r.sms_attempted_at,r.sms_sent_at,r.sms_campaign_id,r.sms_error,r.created_at,e.date_label,e.venue
     from public.eai_registrations r join public.eai_events e on e.id=r.event_id ${where}
     order by r.created_at desc,r.id desc limit 50 offset $3`, [search, term, (page - 1) * 50]);
   return reply(res, 200, {registrations: rows.rows, page, total: count.rows[0].total, pageSize: 50});
 }
-async function update(res, data) {
+async function getSmsSettings() {
+  const result = await dbQuery('select account_id,sender,message,api_key_encrypted,enabled from public.eai_sms_settings where id=true');
+  return result.rows[0] || {account_id:'',sender:'ECKINTOSH',message:defaultMessage,api_key_encrypted:null,enabled:false};
+}
+async function smsSettings(res) {
+  const settings = await getSmsSettings();
+  return reply(res, 200, {settings:{account_id:settings.account_id,sender:settings.sender,message:settings.message,has_api_key:!!settings.api_key_encrypted,enabled:settings.enabled}});
+}
+async function saveSmsSettings(res, data, secret) {
+  const existing = await getSmsSettings();
+  let value;
+  try { value = validSmsSettings(data, !!existing.api_key_encrypted); }
+  catch(error) { return reply(res, 400, {error:error.message}); }
+  const encrypted = value.apiKey ? encryptApiKey(value.apiKey, secret) : existing.api_key_encrypted;
+  await dbQuery(`insert into public.eai_sms_settings(id,account_id,sender,message,api_key_encrypted,enabled) values(true,$1,$2,$3,$4,$5)
+    on conflict(id) do update set account_id=excluded.account_id,sender=excluded.sender,message=excluded.message,api_key_encrypted=excluded.api_key_encrypted,enabled=excluded.enabled,updated_at=now()`,
+  [value.accountId,value.sender,value.message,encrypted,value.enabled]);
+  return reply(res, 200, {ok:true,has_api_key:!!encrypted});
+}
+async function deliverSms(registration, settings, secret) {
+  try {
+    const campaign = await sendSms(settings, registration, secret);
+    await dbQuery("update public.eai_registrations set sms_status='submitted',sms_sent_at=now(),sms_campaign_id=$2,sms_error=null where id=$1 and sms_status='sending'", [registration.id,campaign]);
+    return {status:'submitted'};
+  } catch(error) {
+    const status = error.definitive ? 'failed' : 'unknown';
+    const reason = error.definitive ? error.message : 'The send result is uncertain. Check MNotify before retrying.';
+    await dbQuery('update public.eai_registrations set sms_status=$2,sms_error=$3 where id=$1 and sms_status=$4', [registration.id,status,reason,'sending']);
+    return {status,error:reason};
+  }
+}
+async function retrySms(res, data, secret) {
+  if (typeof data.id !== 'string' || !uuid.test(data.id)) return reply(res, 400, {error:'Invalid registration.'});
+  const settings = await getSmsSettings();
+  if (!settings.enabled || !settings.api_key_encrypted) return reply(res, 400, {error:'Enable SMS and save an MNotify API key first.'});
+  const result = await dbQuery(`update public.eai_registrations set sms_status='sending',sms_attempted_at=now(),sms_error=null
+    where id=$1 and status='paid' and (sms_status in ('not_sent','failed','unknown') or (sms_status='sending' and sms_attempted_at<now()-interval '2 minutes'))
+    returning id,reference,full_name,phone`, [data.id]);
+  if (!result.rowCount) return reply(res, 409, {error:'SMS is already submitted or this registration cannot be sent. Refresh the page.'});
+  return reply(res, 200, {sms:await deliverSms(result.rows[0], settings, secret)});
+}
+async function update(res, data, secret) {
   if (typeof data.id !== 'string' || !uuid.test(data.id)) return reply(res, 400, {error: 'Invalid registration.'});
   const status = data.status;
   const paymentReference = typeof data.payment_reference === 'string' ? data.payment_reference.trim() : '';
-  let query, args;
+  let query, args, smsSettings;
   if (status === 'paid') {
     if (!paymentReference || paymentReference.length > 200) return reply(res, 400, {error: 'Enter the payment transaction reference.'});
-    query = "update public.eai_registrations set status='paid',payment_reference=$2,payment_verified_at=now() where id=$1 and status='pending' returning reference,status,payment_reference,payment_verified_at";
-    args = [data.id, paymentReference];
+    smsSettings = await getSmsSettings();
+    const shouldSend = smsSettings.enabled && !!smsSettings.api_key_encrypted;
+    query = "update public.eai_registrations set status='paid',payment_reference=$2,payment_verified_at=now(),sms_status=$3,sms_attempted_at=case when $3='sending' then now() else null end where id=$1 and status='pending' returning id,reference,full_name,phone,status,payment_reference,payment_verified_at,sms_status";
+    args = [data.id, paymentReference, shouldSend ? 'sending' : 'not_sent'];
   } else if (status === 'cancelled') {
     query = "update public.eai_registrations set status='cancelled' where id=$1 and status='pending' returning reference,status,payment_reference,payment_verified_at";
     args = [data.id];
@@ -99,7 +143,9 @@ async function update(res, data) {
   try {
     const result = await dbQuery(query, args);
     if (!result.rowCount) return reply(res, 409, {error: 'This registration has already changed. Refresh and try again.'});
-    return reply(res, 200, {registration: result.rows[0]});
+    const registration = result.rows[0];
+    const sms = status === 'paid' && registration.sms_status === 'sending' ? await deliverSms(registration, smsSettings, secret) : {status:'not_sent'};
+    return reply(res, 200, {registration, sms});
   } catch (error) {
     if (error.code === '23505') return reply(res, 409, {error: 'That payment reference is already in use.'});
     throw error;
@@ -112,6 +158,7 @@ export default async function handler(req, res) {
     const settings = config();
     if (req.method === 'GET') {
       if (!await hasSession(req, settings)) return reply(res, 401, {error: 'Please sign in.'});
+      if (new URL(req.url, 'http://localhost').searchParams.get('view') === 'sms') return await smsSettings(res);
       return await list(res, req);
     }
     let data;
@@ -119,7 +166,9 @@ export default async function handler(req, res) {
     if (data.action === 'login') return await login(req, res, data, settings);
     if (!await hasSession(req, settings)) return reply(res, 401, {error: 'Please sign in.'});
     if (data.action === 'logout') { await clearSession(req, res); return reply(res, 200, {ok: true}); }
-    if (data.action === 'update') return await update(res, data);
+    if (data.action === 'sms_settings') return await saveSmsSettings(res, data, settings.secret);
+    if (data.action === 'send_sms') return await retrySms(res, data, settings.secret);
+    if (data.action === 'update') return await update(res, data, settings.secret);
     return reply(res, 400, {error: 'Invalid request.'});
   } catch { return reply(res, 503, {error: 'Admin service unavailable. Please try again later.'}); }
 }

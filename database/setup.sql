@@ -14,7 +14,7 @@ create table public.eai_registrations (
  full_name text not null, email text, phone text not null, institution text, programme text not null, study_level text not null, ai_experience text,
  expected_fee_pesewas integer not null check(expected_fee_pesewas>0),
  status text not null default 'pending' check(status in ('pending','paid','cancelled','refunded')),
- payment_reference text unique, payment_verified_at timestamptz, consent_version text not null, consent_at timestamptz not null default now(), created_at timestamptz not null default now(),
+ payment_reference text unique, payment_verified_at timestamptz, sms_status text not null default 'not_sent' check(sms_status in ('not_sent','sending','submitted','failed','unknown')), sms_attempted_at timestamptz, sms_sent_at timestamptz, sms_campaign_id text, sms_error text, consent_version text not null, consent_at timestamptz not null default now(), created_at timestamptz not null default now(),
  check(status not in ('paid','refunded') or (payment_reference is not null and payment_verified_at is not null)),
  unique(event_id,email)
 );
@@ -34,6 +34,13 @@ create table public.eai_admin_sessions (
 );
 alter table public.eai_admin_sessions enable row level security;
 revoke all on public.eai_admin_sessions from public;
+create table public.eai_sms_settings (
+ id boolean primary key default true check(id),
+ account_id text not null default '', sender text not null default '', message text not null default '',
+ api_key_encrypted text, enabled boolean not null default false, updated_at timestamptz not null default now()
+);
+alter table public.eai_sms_settings enable row level security;
+revoke all on public.eai_sms_settings from public;
 create function public.eai_public_event() returns jsonb language sql stable set search_path='' as $$
  select jsonb_build_object('id',e.id,'host',e.host,'venue',e.venue,'date_label',e.date_label,'fee_pesewas',e.fee_pesewas,'open',e.status='open','status',e.status)
  from public.eai_events e where e.status='open' limit 1;
